@@ -1,0 +1,202 @@
+<!doctype html> 
+<html>
+    <head>
+        <title>rectExample</title>
+        <meta charset='utf-8' />
+    </head>
+
+
+    <body>
+
+        <canvas id='example'>Обновите браузер</canvas>
+        <script type="text/javascript">
+
+
+            var example = document.getElementById("example"),
+                ctx     = example.getContext('2d');
+            example.width  = 480;
+            example.height = 480;
+            cellSize = 20;
+            pointsOnField = [];
+            
+            
+            
+//            ctx.strokeRect(15, 15, 266, 266);
+//            ctx.strokeRect(18, 18, 260, 260);
+            ctx.fillRect(0, 0, 480, 480);
+            ctx.beginPath();
+            
+//            ctx.bezierCurveTo(75, 55, 175, 20, 250, 15);
+            ctx.strokeStyle = '#B70A02';
+            ctx.strokeStyle = '#FFF';
+//            ctx.fillStyle = '#AF5200';
+
+            for(var i=0; i<=example.width; i+= cellSize){
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, example.width)
+            }
+            for(var i=0; i<=example.height; i+= cellSize){
+                ctx.moveTo(0, i);
+                ctx.lineTo(example.height, i)
+            }
+//            ctx.fillStyle = "#8ED6FF";
+//            for(var i=0; i<=example.width; i+= cellSize){
+//                ctx.moveTo(i, 100);
+//                ctx.arc(i, 100, 5, 0, Math.PI*2, false)
+//            }
+                ctx.fill(); 
+
+//            for(var i=0; i<example.width; i+= 20)
+//                for(var j=0; i<example.height; j+= 20){
+//                }
+            
+            
+    		
+            ctx.stroke();
+            example.onclick = function(e) { // обрабатываем клики мышью
+                
+                var x = (e.pageX - example.offsetLeft) / cellSize | 0;
+                var y = (e.pageY - example.offsetTop)  / cellSize | 0;
+                event(x, y); // выхов функции действия
+            };
+            var gamer = 1;
+            function event(x,y){
+                if(!checkFreePoint(x,y)) return;
+                
+                drowPoint(x, y)
+                addPoint(x, y)
+                var area = closeArea();
+                console.log(area);
+
+                gamer = 0;
+                autoMove(x, y);
+                gamer = 1;
+                
+//                
+//                if(gamer){
+//                    autoMove();
+//                    gamer = 0;
+//                }else{
+//                    autoMove(x, y);
+//                    gamer = 1;
+//                }
+                
+//                ctx.moveTo(x*cellSize, y*cellSize);
+            }
+            function autoMove(x, y){
+                
+                var nearPoint = findNearPoint(x,y);
+                
+                var _x =  nearPoint.x+1,
+                    _y =  nearPoint.y+1,
+                    _addedPoint = false,
+                    _step = 0;
+                        
+                while(!_addedPoint && _step <100){
+                    if(checkFreePoint(_x,_y)){
+                        drowPoint(_x, _y);
+                        addPoint(_x, _y);
+                        _addedPoint = true;
+                    }
+                    _x ++;
+                    _y++;
+                    _step++;
+                }
+//                
+//                
+            }
+            function closeArea(){
+                var _area = [], 
+                	_lastPoint = pointsOnField[pointsOnField.length-1],
+                	_x = _lastPoint.x, 
+                	_y=_lastPoint.y,
+                	_curX = _lastPoint.x, 
+                	_curY=_lastPoint.y,
+                	_gamer = _lastPoint.gamer;
+                var iter = 0
+                
+                while( ((!_area.length && _x == _curX && _y==_curY) || (_area.length && _x != _curX && _y!= _curY))    && iter < 50){
+                    iter ++;
+                    pointsOnField.forEach(function(p){
+                        if(p.gamer == _gamer){
+                            if( 
+                                    _x-1== p.x && _y== p.y ||
+                                    _x-1 == p.x && _y+1== p.y ||
+                                    _x == p.x && _y+1== p.y ||
+                                    _x+1 == p.x && _y+1== p.y ||
+                                    _x+1 == p.x && _y== p.y ||
+                                    _x+1 == p.x && _y-1== p.y ||
+                                    _x == p.x && _y-1== p.y ||
+                                    _x-1 == p.x && _y-1== p.y
+
+                                ){
+                                _area.push(p);
+                                _x = p.x;
+                                _y = p.y;
+                            }
+
+                        }
+                    })
+                }
+                return _area;
+            }
+            
+            
+            function drowPoint(x, y){
+                ctx.beginPath();
+                if(gamer){
+                    ctx.fillStyle = "blue";
+                }else{
+                    ctx.fillStyle = "red";
+                }
+                ctx.arc(x*cellSize, y*cellSize, 5, 0, Math.PI*2, false);
+                ctx.fill(); 
+            }
+            
+            function checkFreePoint(x, y){
+                var check = true;
+                pointsOnField.forEach(function(e){
+                    if(e.x == x && e.y == y){
+                        check = false;
+                    }
+                })
+                return check;
+            }
+            
+            function addPoint(x, y){
+                pointsOnField.push({x: x,y:y, gamer:gamer})
+            }
+            function findNearPoint(x,y){
+                var pointsNeare = [],
+                    pointNearest = [],
+                    _x = 0, 
+                    _y =0,
+                    cellSizeStep = 0;
+                if(pointsOnField.length > 1){
+                    while(!pointNearest.length && cellSizeStep < 100){
+                        pointsOnField.forEach(function(e){
+                            if((e.x != x || e.y != y) && e.gamer == 1){
+                                if( 
+                                        (e.x == x+cellSizeStep && e.y == y+cellSizeStep) 
+                                        || (e.x == x-cellSizeStep && e.y == y-cellSizeStep) 
+                                        || (e.x == x+cellSizeStep && e.y == y-cellSizeStep) 
+                                        || (e.x == x-cellSizeStep && e.y == y+cellSizeStep) 
+                                        || e.x == x+cellSizeStep 
+                                        || e.y == y+cellSizeStep 
+                                        || e.x == x-cellSizeStep 
+                                        || e.y == y-cellSizeStep
+                                    ){
+                                    pointNearest = e;
+                                }
+                            }
+                        })
+                        cellSizeStep ++;
+                    }
+                }else{
+                    pointNearest = pointsOnField[0]
+                }
+                return pointNearest;
+            }
+        </script>
+    </body>
+</html>
