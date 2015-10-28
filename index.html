@@ -33,7 +33,7 @@
 
             for(var i=0; i<=example.width; i+= cellSize){
                 ctx.moveTo(i, 0);
-                ctx.lineTo(i, example.width)
+                ctx.lineTo(i, example.width);
             }
             for(var i=0; i<=example.height; i+= cellSize){
                 ctx.moveTo(0, i);
@@ -65,7 +65,7 @@
                 
                 drowPoint(x, y)
                 addPoint(x, y)
-                var area = closeArea();
+                var area = closeArea({x: x,y:y, gamer:gamer});
                 console.log(area);
 
                 gamer = 0;
@@ -105,16 +105,74 @@
 //                
 //                
             }
-            function closeArea(){
+/*Шукаємо точку поруч цього ж самого ігрока*/
+function findNearGamerPoint(point){
+    
+                var pointNearest = null,
+                    path = [],
+                    cellSizeStep = 1;
+                path.push(point);
+                pointsOnField.forEach(function(e){
+
+                    // if(e.x === point.x && e.y === point.y) e.checked = 1;
+
+
+                            if((e.x != point.x || e.y != point.y) && e.gamer === gamer && !e.checked && !pointNearest){
+                                if( 
+                                        (e.x == point.x+cellSizeStep && e.y == point.y+cellSizeStep) 
+                                        || (e.x == point.x-cellSizeStep && e.y == point.y-cellSizeStep) 
+                                        || (e.x == point.x+cellSizeStep && e.y == point.y-cellSizeStep) 
+                                        || (e.x == point.x-cellSizeStep && e.y == point.y+cellSizeStep) 
+                                        || (e.x == point.x+cellSizeStep && e.y == point.y)
+                                        || (e.y == point.y+cellSizeStep && e.x == point.x)
+                                        || (e.x == point.x-cellSizeStep && e.y == point.y)
+                                        || (e.y == point.y-cellSizeStep && e.x == point.x)
+                                    ){
+                                    pointNearest = e;
+                                    path.push(e);
+                                    e.checked = 1;
+                                    path = path.concat(findNearGamerPoint(e));
+                                }
+                            }
+                        })
+                return path;
+                return pointNearest;
+}
+
+
+/* обводимо точки */
+            function closeArea(_lastPoint){
                 var _area = [], 
-                	_lastPoint = pointsOnField[pointsOnField.length-1],
+                	// _lastPoint = pointsOnField[pointsOnField.length-1],
                 	_x = _lastPoint.x, 
                 	_y=_lastPoint.y,
                 	_curX = _lastPoint.x, 
                 	_curY=_lastPoint.y,
                 	_gamer = _lastPoint.gamer;
                 var iter = 0
-                
+                pointsOnField.forEach(function(e){e.checked=0});
+                var pointNearest = findNearGamerPoint(_lastPoint);
+ctx.strokeStyle = 'green';
+ctx.beginPath();
+pointNearest.forEach(function(e, i){
+    if(!pointNearest[i+1]) return;
+
+    
+        ctx.moveTo(e.x*cellSize, e.y*cellSize);
+        ctx.lineTo(pointNearest[i+1].x*cellSize, pointNearest[i+1].y*cellSize);
+        ctx.lineWidth = 3;
+
+
+})
+
+            
+            ctx.stroke();
+ctx.strokeStyle = '#FFF';
+
+                console.log(pointNearest);
+
+                return;
+
                 while( ((!_area.length && _x == _curX && _y==_curY) || (_area.length && _x != _curX && _y!= _curY))    && iter < 50){
                     iter ++;
                     pointsOnField.forEach(function(p){
@@ -138,10 +196,12 @@
                         }
                     })
                 }
+
+
                 return _area;
             }
             
-            
+       /*  малюємо крапку */     
             function drowPoint(x, y){
                 ctx.beginPath();
                 if(gamer){
@@ -152,7 +212,7 @@
                 ctx.arc(x*cellSize, y*cellSize, 5, 0, Math.PI*2, false);
                 ctx.fill(); 
             }
-            
+             /*  Перевіряємо чи крапка вільна */  
             function checkFreePoint(x, y){
                 var check = true;
                 pointsOnField.forEach(function(e){
@@ -162,10 +222,12 @@
                 })
                 return check;
             }
+            /*  Додаємо крапку */  
             
             function addPoint(x, y){
                 pointsOnField.push({x: x,y:y, gamer:gamer})
             }
+            /*  Шукаємо найближчу крапку */  
             function findNearPoint(x,y){
                 var pointsNeare = [],
                     pointNearest = [],
